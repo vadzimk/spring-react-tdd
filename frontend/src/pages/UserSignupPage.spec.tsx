@@ -1,15 +1,24 @@
 /* eslint-disable */
 import React from 'react'
-import {fireEvent, queryByPlaceholderText, render} from '@testing-library/react'
+import {fireEvent, render, waitFor, waitForElementToBeRemoved, act} from '@testing-library/react'
 import '@testing-library/jest-dom/extend-expect'
-import UserSignupPage, {UserSignupPageActions} from "./UserSignupPage";
+import UserSignupPage, {UserSignupFormFields, UserSignupPageActions} from "./UserSignupPage";
 
-
-const actions = {
-    postSignUp: jest.fn().mockResolvedValueOnce({})
+function mockAsyncDelayed() {
+    return (formValues: UserSignupFormFields): Promise<{}> => {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve({})
+            }, 300)
+        })
+    };
 }
 
-let displayNameInput, userNameInput, passwordInput, passwordRepeat, button: HTMLElement | null;
+const actions = {
+    postSignUp: mockAsyncDelayed()
+}
+
+let displayNameInput, userNameInput, passwordInput, passwordRepeat, button: HTMLElement;
 
 function changeEvent(content: string): { target: { value: any } } {
     return {
@@ -40,10 +49,9 @@ function setupForSubmit({actions}: { actions: UserSignupPageActions }) {
     fireEvent.change(passwordRepeat, changeEvent(expectedUser.repeatPassword))
 
 
-    button = container.querySelector('button')
+    button = container.querySelector('button') as HTMLElement
     return rendered;
 }
-
 
 
 describe('UserSignupPage', () => {
@@ -115,15 +123,64 @@ describe('UserSignupPage', () => {
             expect(input).toHaveValue(expectedRepeatPassword)
         })
         it('calls post signUp when the form is valid', () => {
+            const actions = {
+                postSignUp: jest.fn().mockResolvedValueOnce({})
+            }
+
             setupForSubmit({actions});
-            fireEvent.click(button as HTMLElement)
+            fireEvent.click(button)
             expect(actions.postSignUp).toHaveBeenCalledTimes(1)
         })
         it('calls post with user form fields when fields are valid', () => {
+            const actions = {
+                postSignUp: jest.fn().mockResolvedValueOnce({})
+            }
             setupForSubmit({actions});
-            fireEvent.click(button as HTMLElement)
-
+            fireEvent.click(button)
             expect(actions.postSignUp).toHaveBeenCalledWith(expectedUser)
+        })
+        it('does not allow user to click the Sign Up button when there is an api call', () => {
+            const actions = {
+                postSignUp: jest.fn().mockResolvedValueOnce({})
+            }
+            setupForSubmit({actions})
+            fireEvent.click(button)
+            fireEvent.click(button)
+            expect(actions.postSignUp).toHaveBeenCalledTimes(1)
+        })
+        it('displays a spinner when there is an ongoing api call', () => {
+            const actions = {
+                postSignUp: mockAsyncDelayed()
+            }
+            const {queryByText} = setupForSubmit({actions})
+            fireEvent.click(button)
+            const spinner = queryByText('Loading...')
+            expect(spinner).toBeInTheDocument()
+        })
+        it('hides spinner after api call finishes successfully', async () => {
+            const actions = {
+                postSignUp: mockAsyncDelayed()
+            }
+            const {queryByText} = setupForSubmit({actions})
+            fireEvent.click(button)
+            await waitForElementToBeRemoved(() => queryByText('Loading...'))
+        })
+        it('hides spinner after api call finishes with error', async () => {
+            const actions = {
+                postSignUp: (formValues: UserSignupFormFields): Promise<{}> => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            reject({
+                                response:{data:{}}
+                            })
+                        }, 300)
+                    })
+                }
+
+            }
+            const {queryByText} = setupForSubmit({actions})
+            fireEvent.click(button)
+            await waitForElementToBeRemoved(() => queryByText('Loading...'))
         })
     })
 })

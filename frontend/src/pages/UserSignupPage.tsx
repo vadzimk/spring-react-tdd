@@ -4,7 +4,7 @@ export interface UserSignupPageActions {
     postSignUp: (formValues: UserSignupFormFields) => Promise<{}>
 }
 
-interface UserSignupFormFields {
+export interface UserSignupFormFields {
     displayName: string,
     username: string,
     password: string,
@@ -20,6 +20,7 @@ export default function UserSignupPage({actions}: { actions: UserSignupPageActio
     }
 
     const [formValues, setFormValues] = useState(initialFormValues)
+    const [isPostSignupPending, setIsPostSignupPending] = useState(false)
 
     const handleFormValuesChange = (e: React.FormEvent<HTMLInputElement>) => {
         setFormValues({
@@ -30,7 +31,13 @@ export default function UserSignupPage({actions}: { actions: UserSignupPageActio
 
     const handleSubmit = (e: React.SyntheticEvent) => {
         e.preventDefault()
-        actions.postSignUp(formValues)
+        setIsPostSignupPending(true)
+        actions.postSignUp(formValues).then(res=>{
+            setIsPostSignupPending(false)
+        }).catch(e=>{
+            setIsPostSignupPending(false)
+        })
+
     }
 
     return (
@@ -81,7 +88,16 @@ export default function UserSignupPage({actions}: { actions: UserSignupPageActio
                         value={formValues.repeatPassword}
                     />
                 </div>
-                <button type='submit' className="block button mt-3 uppercase rounded ml-auto mr-0">Sign Up</button>
+                <div className="flex justify-between mt-3 items-baseline">
+                    <span className="flex-grow text-center">{isPostSignupPending && "Loading..."}</span>
+                    <button
+                        type='submit'
+                        className="block button uppercase rounded"
+                        disabled={isPostSignupPending}
+                    >
+                        Sign Up
+                    </button>
+                </div>
             </form>
         </div>
     );
