@@ -18,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -164,6 +165,26 @@ public class UserControllerTest {
         ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
         assertThat(response.getBody().getValidationErrors().size()).isEqualTo(3);
     }
-
-
+    @Test
+    public void postUser_whenUsernameIsNull_receiveValidationErrorCustom(){
+        User user = new User();
+        ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
+        Map<String, String> validationErrors = response.getBody().getValidationErrors();
+        assertThat(validationErrors.get("username")).isEqualTo("Username cannot be empty");
+    }
+    @Test
+    public void postUser_whenPasswordIsNull_receiveValidationErrorCustom(){
+        User user = new User();
+        ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
+        Map<String, String> validationErrors = response.getBody().getValidationErrors();
+        assertThat(validationErrors.get("password")).isEqualTo("cannot be null");
+    }
+    @Test
+    public void postUser_whenPasswordIsInvalidPattern_receiveValidationErrorCustom(){
+        User user = new User();
+        user.setPassword("12345678");
+        ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
+        Map<String, String> validationErrors = response.getBody().getValidationErrors();
+        assertThat(validationErrors.get("password")).isEqualTo("Password must have at least one uppercase, one lowercase, and one number");
+    }
 }

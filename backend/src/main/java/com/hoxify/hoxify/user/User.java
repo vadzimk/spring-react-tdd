@@ -17,7 +17,7 @@ public class User {
     @Id
     @GeneratedValue
     private long id;
-    @NotNull  // bean validation on the model
+    @NotNull(message = "{hoaxify.constrains.username.NotNull.message}")  // bean validation on the model
     @Size(min = 4, max = 255)
     private String username;
     @NotNull
@@ -25,7 +25,7 @@ public class User {
     private String displayName;
     @NotNull
     @Size(min = 8, max = 255)
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$" )
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$" , message = "{hoaxify.constrains.password.pattern.message}")
     private String password;
 
 }
