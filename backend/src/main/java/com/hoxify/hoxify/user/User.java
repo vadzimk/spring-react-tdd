@@ -1,6 +1,7 @@
 package com.hoxify.hoxify.user;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -11,6 +12,7 @@ import javax.validation.constraints.Size;
 
 @Data
 @Entity
+@NoArgsConstructor
 public class User {
     @Id
     @GeneratedValue
@@ -26,7 +28,4 @@ public class User {
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$" )
     private String password;
 
-    public User() {
-
-    }
 }
